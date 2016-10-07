@@ -37,7 +37,7 @@ func NewIndexBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *In
 		BlockAddress:   blockAddress,
 		Min:            NewKeyPointerFromBuffer(buffer[0:24]),
 		Max:            NewKeyPointerFromBuffer(buffer[24:48]),
-		KeyPointerList: NewKeyPointerListFromBuffer(buffer[48:]),
+		KeyPointerList: NewKeyPointerListFromBuffer(buffer[48:BLOCK_SIZE]),
 	}
 }
 

@@ -26,14 +26,19 @@ type DataBlock struct {
 
 func NewDataBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *DataBlock {
 	fmt.Printf("-- Init Data Block from buffer len %d\n", len(buffer))
+	ln := sliceToUint16(buffer[16:18])
+	if ln > BLOCK_SIZE {
+		ln = BLOCK_SIZE
+	}
 	x := &DataBlock{
 		BPKS:         bpks,
 		BlockAddress: blockAddress,
 		Prev:         sliceToUint64(buffer[0:8]),
 		Next:         sliceToUint64(buffer[8:16]),
-		Length:       sliceToUint16(buffer[16:18]),
+		Length:       ln,
 	}
-	x.Data = buffer[18 : 18+x.Length]
+	fmt.Printf("-- Data is %d bytes long\n", ln)
+	x.Data = buffer[18 : 18+ln]
 	return x
 }
 
