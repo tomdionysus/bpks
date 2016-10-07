@@ -2,6 +2,7 @@ package bpks
 
 import (
 	"bytes"
+	"crypto/md5"
 	"fmt"
 )
 
@@ -9,6 +10,10 @@ type Key [16]byte
 
 var MinKey Key = Key{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 var MaxKey Key = Key{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
+
+func NewKeyFromStringMD5(str string) Key {
+	return Key(md5.Sum([]byte(str)))
+}
 
 func (me Key) String() string {
 	return fmt.Sprintf("%02x", me[:])

@@ -85,9 +85,11 @@ func (me *BPKS) Deallocate(blockAddress uint64) {
 	panic("Not Implemented")
 }
 
+// Low Level KeyPointer Funcs
+
 // Add writes the specified KeyPointer to the keystore
-func (me *BPKS) Add(kp KeyPointer) {
-	me.Root.Add(kp)
+func (me *BPKS) Add(kp KeyPointer) error {
+	return me.Root.Add(kp)
 }
 
 // Find finds the specified Key in the keystore, returning its KeyPointer if found, or
@@ -95,6 +97,51 @@ func (me *BPKS) Add(kp KeyPointer) {
 func (me *BPKS) Find(key Key) (KeyPointer, bool, error) {
 	return me.Root.Find(key)
 }
+
+// High Level Storage Functions
+func (me *BPKS) Set(key string, data []byte) error {
+	// TODO: detect replace
+
+	// Write Key
+	firstDataBlockAddress := me.Allocate()
+	kp := KeyPointer{
+		Key:          NewKeyFromStringMD5(key),
+		BlockAddress: firstDataBlockAddress,
+	}
+	// TODO: Write multi-block data
+	db := &DataBlock{
+		BPKS:         me,
+		BlockAddress: firstDataBlockAddress,
+		Data:         data,
+	}
+	err := me.Add(kp)
+	if err != nil {
+		return err
+	}
+	err = me.WriteDataBlock(db)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (me *BPKS) Get(key string) ([]byte, bool, error) {
+	kp, found, err := me.Find(NewKeyFromStringMD5(key))
+	if err != nil {
+		return nil, false, err
+	}
+	if !found {
+		return nil, false, nil
+	}
+	db, err := me.ReadDataBlock(kp.BlockAddress)
+	if err != nil {
+		return nil, false, err
+	}
+	// TODO: Read multi-block data
+	return db.Data, true, nil
+}
+
+// IO Funcs
 
 func (me *BPKS) ReadIndexBlock(blockAddress uint64) (*IndexBlock, error) {
 	fmt.Printf("Reading Index Block at address %d (offset %d)\n", blockAddress, blockAddress*BLOCK_SIZE)
@@ -108,12 +155,43 @@ func (me *BPKS) ReadIndexBlock(blockAddress uint64) (*IndexBlock, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("- Init Index Block from buffer len %d bytes\n", c)
+	fmt.Printf("- Read %d bytes\n", c)
 	return NewIndexBlockFromBuffer(me, blockAddress, buffer[:]), nil
 }
 
 func (me *BPKS) WriteIndexBlock(block *IndexBlock) error {
 	fmt.Printf("Writing Index Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BLOCK_SIZE)
+	_, err := me.Device.Seek(int64(block.BlockAddress*BLOCK_SIZE), 0)
+	if err != nil {
+		return err
+	}
+	buffer := block.AsSlice()
+	c, err := me.Device.Write(buffer[:])
+	if err != nil {
+		return err
+	}
+	fmt.Printf("- Wrote %d bytes\n", c)
+	return nil
+}
+
+func (me *BPKS) ReadDataBlock(blockAddress uint64) (*DataBlock, error) {
+	fmt.Printf("Reading Data Block at address %d (offset %d)\n", blockAddress, blockAddress*BLOCK_SIZE)
+	_, err := me.Device.Seek(int64(blockAddress*BLOCK_SIZE), 0)
+	if err != nil {
+		return nil, err
+	}
+	buffer := [BLOCK_SIZE]byte{}
+	fmt.Printf("- Reading %d Bytes\n", BLOCK_SIZE)
+	c, err := me.Device.Read(buffer[:])
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("- Read %d bytes\n", c)
+	return NewDataBlockFromBuffer(me, blockAddress, buffer[:]), nil
+}
+
+func (me *BPKS) WriteDataBlock(block *DataBlock) error {
+	fmt.Printf("Writing Data Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BLOCK_SIZE)
 	_, err := me.Device.Seek(int64(block.BlockAddress*BLOCK_SIZE), 0)
 	if err != nil {
 		return err

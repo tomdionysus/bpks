@@ -1,6 +1,10 @@
 package bpks
 
-// 4096 Bytes
+import (
+	"fmt"
+)
+
+// BLOCK_SIZE Bytes
 
 // 0 - Prev 8 bytes
 // 8 - Next 8 bytes
@@ -10,7 +14,7 @@ package bpks
 // DataBlock represents a 4078 byte data block with block addresses of the previous and next blocks.
 type DataBlock struct {
 	// Not Serialized
-	BPKS         BPKS
+	BPKS         *BPKS
 	BlockAddress uint64
 
 	// Serialized
@@ -20,13 +24,27 @@ type DataBlock struct {
 	Data   []byte
 }
 
+func NewDataBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *DataBlock {
+	fmt.Printf("-- Init Data Block from buffer len %d\n", len(buffer))
+	x := &DataBlock{
+		BPKS:         bpks,
+		BlockAddress: blockAddress,
+		Prev:         sliceToUint64(buffer[0:8]),
+		Next:         sliceToUint64(buffer[8:16]),
+		Length:       sliceToUint16(buffer[16:18]),
+	}
+	x.Data = buffer[18 : 18+x.Length]
+	return x
+}
+
 func (me *DataBlock) AsSlice() []byte {
+	me.Length = uint16(len(me.Data))
 	buf := uint64ToSlice(me.Prev)
 	buf = append(buf, uint64ToSlice(me.Next)...)
 	buf = append(buf, uint16ToSlice(me.Length)...)
 	buf = append(buf, me.Data...)
-	if len(buf) < 4096 {
-		x := make([]byte, 4096-len(buf))
+	if len(buf) < BLOCK_SIZE {
+		x := make([]byte, BLOCK_SIZE-len(buf))
 		buf = append(buf, x...)
 	}
 	return buf

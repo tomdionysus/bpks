@@ -5,6 +5,11 @@ import (
 	"testing"
 )
 
+func TestNewKeyFromStringMD5(t *testing.T) {
+	x := NewKeyFromStringMD5("testing!")
+	assert.Equal(t, "64ac4af82c8c3c9d9c77a7a744b71fac", x.String())
+}
+
 func TestKeyString(t *testing.T) {
 	x := Key{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf}
 
