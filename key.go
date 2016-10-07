@@ -21,3 +21,8 @@ func (me Key) Nil() bool {
 func (me Key) Cmp(other Key) int {
 	return bytes.Compare(me[:], other[:])
 }
+
+func (me Key) AsSlice() []byte {
+	x := [16]byte(me)
+	return x[:]
+}

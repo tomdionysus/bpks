@@ -8,6 +8,8 @@ import (
 	"io"
 )
 
+const BLOCK_SIZE = 4096
+
 // BPKS (B+Tree Key Store) is a key-value store based around a B+Tree
 type BPKS struct {
 	Device io.ReadWriteSeeker
@@ -44,7 +46,7 @@ func (me *BPKS) Mount() error {
 	}
 
 	// Load Index Block
-	root, err := me.LoadIndexBlock(2)
+	root, err := me.ReadIndexBlock(2)
 	if err != nil {
 		return err
 	}
@@ -68,11 +70,8 @@ func (me *BPKS) Format() error {
 	// TODO: SpaceBPKS
 
 	// Root Index Block
-	me.Root = &IndexBlock{
-		BPKS:         me,
-		BlockAddress: 2,
-	}
-	return me.SaveIndexBlock(me.Root)
+	me.Root = NewIndexBlock(me, 2)
+	return me.WriteIndexBlock(me.Root)
 }
 
 // Allocate gets the block address of the first free block on the device and marks it used.
@@ -97,26 +96,33 @@ func (me *BPKS) Find(key Key) (KeyPointer, bool, error) {
 	return me.Root.Find(key)
 }
 
-func (me *BPKS) LoadIndexBlock(blockAddress uint64) (*IndexBlock, error) {
-	fmt.Printf("Loading Index Block at address %d (offset %d)\n", blockAddress, blockAddress*4096)
-	_, err := me.Device.Seek(int64(blockAddress*4096), 0)
+func (me *BPKS) ReadIndexBlock(blockAddress uint64) (*IndexBlock, error) {
+	fmt.Printf("Reading Index Block at address %d (offset %d)\n", blockAddress, blockAddress*BLOCK_SIZE)
+	_, err := me.Device.Seek(int64(blockAddress*BLOCK_SIZE), 0)
 	if err != nil {
 		return nil, err
 	}
-	buffer := [4096]byte{}
-	fmt.Printf("- Reading 4096 Bytes\n")
+	buffer := [BLOCK_SIZE]byte{}
+	fmt.Printf("- Reading BLOCK_SIZE Bytes\n")
 	c, err := me.Device.Read(buffer[:])
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("- Init Index Block from buffer len %d\n", c)
+	fmt.Printf("- Init Index Block from buffer len %d bytes\n", c)
 	return NewIndexBlockFromBuffer(me, blockAddress, buffer[:]), nil
 }
 
-func (me *BPKS) SaveIndexBlock(block *IndexBlock) error {
-	_, err := me.Device.Seek(int64(block.BlockAddress), 0)
+func (me *BPKS) WriteIndexBlock(block *IndexBlock) error {
+	fmt.Printf("Writing Index Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BLOCK_SIZE)
+	_, err := me.Device.Seek(int64(block.BlockAddress*BLOCK_SIZE), 0)
 	if err != nil {
 		return err
 	}
+	buffer := block.AsSlice()
+	c, err := me.Device.Write(buffer[:])
+	if err != nil {
+		return err
+	}
+	fmt.Printf("- Wrote %d bytes\n", c)
 	return nil
 }

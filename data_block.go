@@ -19,3 +19,15 @@ type DataBlock struct {
 	Length uint16
 	Data   []byte
 }
+
+func (me *DataBlock) AsSlice() []byte {
+	buf := uint64ToSlice(me.Prev)
+	buf = append(buf, uint64ToSlice(me.Next)...)
+	buf = append(buf, uint16ToSlice(me.Length)...)
+	buf = append(buf, me.Data...)
+	if len(buf) < 4096 {
+		x := make([]byte, 4096-len(buf))
+		buf = append(buf, x...)
+	}
+	return buf
+}

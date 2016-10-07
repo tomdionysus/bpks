@@ -32,3 +32,9 @@ func (me KeyPointer) Nil() bool {
 func (me KeyPointer) Cmp(other KeyPointer) int {
 	return me.Key.Cmp(other.Key)
 }
+
+func (me KeyPointer) AsSlice() []byte {
+	buf := me.Key.AsSlice()
+	buf = append(buf, uint64ToSlice(me.BlockAddress)...)
+	return buf
+}

@@ -50,6 +50,16 @@ func (me *KeyPointerList) MaxKey() Key {
 	return (*me)[x-1].Key
 }
 
+func (me *KeyPointerList) AsSlice() []byte {
+	buf := []byte{}
+	l := me.Len()
+	buf = append(buf, uint16ToSlice(uint16(l))...)
+	for i := 0; i < l; i++ {
+		buf = append(buf, (*me)[i].AsSlice()...)
+	}
+	return buf
+}
+
 // Implement sort.Interface
 func (me *KeyPointerList) Len() int {
 	return len(*me)
