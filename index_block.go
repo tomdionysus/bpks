@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// Blocks are BLOCK_SIZE Bytes.
+// Blocks are BlockSize Bytes.
 
 // 0 - Minimum KeyPointer
 // 24 - Max KeyPointer
@@ -37,7 +37,7 @@ func NewIndexBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *In
 		BlockAddress:   blockAddress,
 		Min:            NewKeyPointerFromBuffer(buffer[0:24]),
 		Max:            NewKeyPointerFromBuffer(buffer[24:48]),
-		KeyPointerList: NewKeyPointerListFromBuffer(buffer[48:BLOCK_SIZE]),
+		KeyPointerList: NewKeyPointerListFromBuffer(buffer[48:BlockSize]),
 	}
 }
 
@@ -163,8 +163,8 @@ func (me *IndexBlock) AsSlice() []byte {
 	buf := me.Min.AsSlice()
 	buf = append(buf, me.Max.AsSlice()...)
 	buf = append(buf, me.KeyPointerList.AsSlice()...)
-	if len(buf) < BLOCK_SIZE {
-		x := make([]byte, BLOCK_SIZE-len(buf))
+	if len(buf) < BlockSize {
+		x := make([]byte, BlockSize-len(buf))
 		buf = append(buf, x...)
 	}
 	return buf

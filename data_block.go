@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// BLOCK_SIZE Bytes
+// BlockSize Bytes
 
 // 0 - Prev 8 bytes
 // 8 - Next 8 bytes
@@ -27,8 +27,8 @@ type DataBlock struct {
 func NewDataBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *DataBlock {
 	fmt.Printf("-- Init Data Block from buffer len %d\n", len(buffer))
 	ln := sliceToUint16(buffer[16:18])
-	if ln > BLOCK_SIZE {
-		ln = BLOCK_SIZE
+	if ln > BlockSize {
+		ln = BlockSize
 	}
 	x := &DataBlock{
 		BPKS:         bpks,
@@ -48,8 +48,8 @@ func (me *DataBlock) AsSlice() []byte {
 	buf = append(buf, uint64ToSlice(me.Next)...)
 	buf = append(buf, uint16ToSlice(me.Length)...)
 	buf = append(buf, me.Data...)
-	if len(buf) < BLOCK_SIZE {
-		x := make([]byte, BLOCK_SIZE-len(buf))
+	if len(buf) < BlockSize {
+		x := make([]byte, BlockSize-len(buf))
 		buf = append(buf, x...)
 	}
 	return buf

@@ -8,9 +8,10 @@ import (
 	"io"
 )
 
-const BLOCK_SIZE = 4096
+// BlockSize is the block size for the B+Tree in bytes.
+const BlockSize = 4096
 
-// BPKS (B+Tree Key Store) is a key-value store based around a B+Tree
+// BPKS (B+Tree Key Store) is a key-value store based around a B+Tree.
 type BPKS struct {
 	Device io.ReadWriteSeeker
 	Root   *IndexBlock
@@ -30,14 +31,14 @@ func New(device io.ReadWriteSeeker) *BPKS {
 
 // Mount mounts the BPKS keystore on the attached device. An error is returned if the
 // device does not contain a formatted BPKS keystore.
-func (me *BPKS) Mount() error {
+func (bp *BPKS) Mount() error {
 	// Check Header
-	_, err := me.Device.Seek(0, 0)
+	_, err := bp.Device.Seek(0, 0)
 	if err != nil {
 		return err
 	}
 	var buf = make([]byte, 6)
-	_, err = me.Device.Read(buf)
+	_, err = bp.Device.Read(buf)
 	if err != nil {
 		return err
 	}
@@ -46,23 +47,23 @@ func (me *BPKS) Mount() error {
 	}
 
 	// Load Index Block
-	root, err := me.ReadIndexBlock(2)
+	root, err := bp.ReadIndexBlock(2)
 	if err != nil {
 		return err
 	}
-	me.Root = root
+	bp.Root = root
 	return nil
 }
 
 // Format initialises a new BPKS keystore on the attached ReadWriteSeeker. This
 // will erase all keys and values from an existing keystore.
-func (me *BPKS) Format() error {
+func (bp *BPKS) Format() error {
 	// Header
-	_, err := me.Device.Seek(0, 0)
+	_, err := bp.Device.Seek(0, 0)
 	if err != nil {
 		return err
 	}
-	_, err = me.Device.Write(BPKSHeader)
+	_, err = bp.Device.Write(BPKSHeader)
 	if err != nil {
 		return err
 	}
@@ -70,70 +71,75 @@ func (me *BPKS) Format() error {
 	// TODO: SpaceBPKS
 
 	// Root Index Block
-	me.Root = NewIndexBlock(me, 2)
-	return me.WriteIndexBlock(me.Root)
+	bp.Root = NewIndexBlock(bp, 2)
+	return bp.WriteIndexBlock(bp.Root)
 }
 
 // Allocate gets the block address of the first free block on the device and marks it used.
-func (me *BPKS) Allocate() uint64 {
+func (bp *BPKS) Allocate() uint64 {
 	firstFreeBlock++
 	return firstFreeBlock
 }
 
 // Deallocate frees the specified block address for reuse.
-func (me *BPKS) Deallocate(blockAddress uint64) {
+func (bp *BPKS) Deallocate(blockAddress uint64) {
 	panic("Not Implemented")
 }
 
 // Low Level KeyPointer Funcs
 
 // Add writes the specified KeyPointer to the keystore
-func (me *BPKS) Add(kp KeyPointer) error {
-	return me.Root.Add(kp)
+func (bp *BPKS) Add(kp KeyPointer) error {
+	return bp.Root.Add(kp)
 }
 
 // Find finds the specified Key in the keystore, returning its KeyPointer if found, or
 // an empty KeyPointer and false if not
-func (me *BPKS) Find(key Key) (KeyPointer, bool, error) {
-	return me.Root.Find(key)
+func (bp *BPKS) Find(key Key) (KeyPointer, bool, error) {
+	return bp.Root.Find(key)
 }
 
 // High Level Storage Functions
-func (me *BPKS) Set(key string, data []byte) error {
+
+// Set writes a key/value pair of the MD5 of the supplied string, and data, to the key store,
+// returning nil on success or an error.
+func (bp *BPKS) Set(key string, data []byte) error {
 	// TODO: detect replace
 
 	// Write Key
-	firstDataBlockAddress := me.Allocate()
+	firstDataBlockAddress := bp.Allocate()
 	kp := KeyPointer{
 		Key:          NewKeyFromStringMD5(key),
 		BlockAddress: firstDataBlockAddress,
 	}
 	// TODO: Write multi-block data
 	db := &DataBlock{
-		BPKS:         me,
+		BPKS:         bp,
 		BlockAddress: firstDataBlockAddress,
 		Data:         data,
 	}
-	err := me.Add(kp)
+	err := bp.Add(kp)
 	if err != nil {
 		return err
 	}
-	err = me.WriteDataBlock(db)
+	err = bp.WriteDataBlock(db)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (me *BPKS) Get(key string) ([]byte, bool, error) {
-	kp, found, err := me.Find(NewKeyFromStringMD5(key))
+// Get finds and reads the value of they which is the MD5 of the given string, returning
+// the data, whether they key was found, and/or an error if any.
+func (bp *BPKS) Get(key string) ([]byte, bool, error) {
+	kp, found, err := bp.Find(NewKeyFromStringMD5(key))
 	if err != nil {
 		return nil, false, err
 	}
 	if !found {
 		return nil, false, nil
 	}
-	db, err := me.ReadDataBlock(kp.BlockAddress)
+	db, err := bp.ReadDataBlock(kp.BlockAddress)
 	if err != nil {
 		return nil, false, err
 	}
@@ -143,30 +149,34 @@ func (me *BPKS) Get(key string) ([]byte, bool, error) {
 
 // IO Funcs
 
-func (me *BPKS) ReadIndexBlock(blockAddress uint64) (*IndexBlock, error) {
-	fmt.Printf("Reading Index Block at address %d (offset %d)\n", blockAddress, blockAddress*BLOCK_SIZE)
-	_, err := me.Device.Seek(int64(blockAddress*BLOCK_SIZE), 0)
+// ReadIndexBlock reads and returns the IndexBlock at the specified block address, returning
+// a pointer to the parsed IndexBlock and/or an error if any.
+func (bp *BPKS) ReadIndexBlock(blockAddress uint64) (*IndexBlock, error) {
+	fmt.Printf("Reading Index Block at address %d (offset %d)\n", blockAddress, blockAddress*BlockSize)
+	_, err := bp.Device.Seek(int64(blockAddress*BlockSize), 0)
 	if err != nil {
 		return nil, err
 	}
-	buffer := [BLOCK_SIZE]byte{}
-	fmt.Printf("- Reading BLOCK_SIZE Bytes\n")
-	c, err := me.Device.Read(buffer[:])
+	buffer := [BlockSize]byte{}
+	fmt.Printf("- Reading BlockSize Bytes\n")
+	c, err := bp.Device.Read(buffer[:])
 	if err != nil {
 		return nil, err
 	}
 	fmt.Printf("- Read %d bytes\n", c)
-	return NewIndexBlockFromBuffer(me, blockAddress, buffer[:]), nil
+	return NewIndexBlockFromBuffer(bp, blockAddress, buffer[:]), nil
 }
 
-func (me *BPKS) WriteIndexBlock(block *IndexBlock) error {
-	fmt.Printf("Writing Index Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BLOCK_SIZE)
-	_, err := me.Device.Seek(int64(block.BlockAddress*BLOCK_SIZE), 0)
+// WriteIndexBlock writes the specified IndexBlock to its block address, returning
+// nil on success or an error.
+func (bp *BPKS) WriteIndexBlock(block *IndexBlock) error {
+	fmt.Printf("Writing Index Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
+	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
 	if err != nil {
 		return err
 	}
 	buffer := block.AsSlice()
-	c, err := me.Device.Write(buffer[:])
+	c, err := bp.Device.Write(buffer[:])
 	if err != nil {
 		return err
 	}
@@ -174,30 +184,34 @@ func (me *BPKS) WriteIndexBlock(block *IndexBlock) error {
 	return nil
 }
 
-func (me *BPKS) ReadDataBlock(blockAddress uint64) (*DataBlock, error) {
-	fmt.Printf("Reading Data Block at address %d (offset %d)\n", blockAddress, blockAddress*BLOCK_SIZE)
-	_, err := me.Device.Seek(int64(blockAddress*BLOCK_SIZE), 0)
+// ReadDataBlock reads and returns the DataBlock at the specified block address, returning
+// a pointer to the parsed DataBlock and/or an error if any.
+func (bp *BPKS) ReadDataBlock(blockAddress uint64) (*DataBlock, error) {
+	fmt.Printf("Reading Data Block at address %d (offset %d)\n", blockAddress, blockAddress*BlockSize)
+	_, err := bp.Device.Seek(int64(blockAddress*BlockSize), 0)
 	if err != nil {
 		return nil, err
 	}
-	buffer := [BLOCK_SIZE]byte{}
-	fmt.Printf("- Reading %d Bytes\n", BLOCK_SIZE)
-	c, err := me.Device.Read(buffer[:])
+	buffer := [BlockSize]byte{}
+	fmt.Printf("- Reading %d Bytes\n", BlockSize)
+	c, err := bp.Device.Read(buffer[:])
 	if err != nil {
 		return nil, err
 	}
 	fmt.Printf("- Read %d bytes\n", c)
-	return NewDataBlockFromBuffer(me, blockAddress, buffer[:]), nil
+	return NewDataBlockFromBuffer(bp, blockAddress, buffer[:]), nil
 }
 
-func (me *BPKS) WriteDataBlock(block *DataBlock) error {
-	fmt.Printf("Writing Data Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BLOCK_SIZE)
-	_, err := me.Device.Seek(int64(block.BlockAddress*BLOCK_SIZE), 0)
+// WriteDataBlock writes the specified DataBlock to its block address, returning
+// nil on success or an error.
+func (bp *BPKS) WriteDataBlock(block *DataBlock) error {
+	fmt.Printf("Writing Data Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
+	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
 	if err != nil {
 		return err
 	}
 	buffer := block.AsSlice()
-	c, err := me.Device.Write(buffer[:])
+	c, err := bp.Device.Write(buffer[:])
 	if err != nil {
 		return err
 	}
