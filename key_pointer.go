@@ -29,7 +29,7 @@ func (kp KeyPointer) Nil() bool {
 	return kp.Key.Nil()
 }
 
-// Cmp compares the Key of this KeyPointer to the Key of another KeyPointer and return:
+// Cmp compares the Key of this KeyPointer to the Key of another KeyPointer and returns:
 // * -1 If this Key is less than the other Key
 // * 0 If this Key is equal to the other Key
 // * +1 If this Key is more than the other Key
