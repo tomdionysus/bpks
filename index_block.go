@@ -42,7 +42,7 @@ func NewIndexBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *In
 }
 
 func (me *IndexBlock) Add(kp KeyPointer) error {
-	fmt.Printf("IndexBlock.Add %s\n", kp)
+	fmt.Printf("IndexBlock.Add %s -> %d\n", kp.Key, kp.BlockAddress)
 	// If there is a minimum and the key is less than the minimum
 	if me.Min.BlockAddress != 0 && me.Min.Cmp(kp) == -1 {
 		fmt.Printf("- Min exists and key is less than min %s\n", me.Min.Key)

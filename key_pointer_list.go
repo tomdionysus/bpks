@@ -18,75 +18,75 @@ func NewKeyPointerListFromBuffer(buffer []byte) *KeyPointerList {
 	return &x
 }
 
-func (me *KeyPointerList) Add(kp KeyPointer) {
-	fmt.Printf("KeyPointerList.Add %s\n", kp)
-	*me = append(*me, kp)
-	sort.Sort(me)
+func (kpl *KeyPointerList) Add(kp KeyPointer) {
+	fmt.Printf("KeyPointerList.Add %s -> %d\n", kp.Key, kp.BlockAddress)
+	*kpl = append(*kpl, kp)
+	sort.Sort(kpl)
 }
 
-func (me *KeyPointerList) Find(key Key) (KeyPointer, bool) {
+func (kpl *KeyPointerList) Find(key Key) (KeyPointer, bool) {
 	fmt.Printf("KeyPointerList.Find %s\n", key)
-	l := len(*me)
-	i := sort.Search(l, func(i int) bool { return (*me)[i].Key.Cmp(key) != -1 })
+	l := len(*kpl)
+	i := sort.Search(l, func(i int) bool { return (*kpl)[i].Key.Cmp(key) != -1 })
 	if i < l {
-		return (*me)[i], true
+		return (*kpl)[i], true
 	}
 
 	return KeyPointer{}, false
 }
 
-func (me *KeyPointerList) Remove(key Key) (KeyPointer, bool) {
+func (kpl *KeyPointerList) Remove(key Key) (KeyPointer, bool) {
 	fmt.Printf("KeyPointerList.Remove %s\n", key)
-	l := len(*me)
-	i := sort.Search(l, func(i int) bool { return (*me)[i].Key.Cmp(key) != -1 })
+	l := len(*kpl)
+	i := sort.Search(l, func(i int) bool { return (*kpl)[i].Key.Cmp(key) != -1 })
 	if i >= l {
 		return KeyPointer{}, false
 	}
 
-	kpout := (*me)[i]
-	nsl := (*me)[:i]
-	nsl = append(nsl, (*me)[i+1:]...)
-	*me = KeyPointerList(nsl)
+	kpout := (*kpl)[i]
+	nsl := (*kpl)[:i]
+	nsl = append(nsl, (*kpl)[i+1:]...)
+	*kpl = KeyPointerList(nsl)
 
 	return kpout, true
 }
 
-func (me *KeyPointerList) MinKey() Key {
-	if len(*me) == 0 {
+func (kpl *KeyPointerList) MinKey() Key {
+	if len(*kpl) == 0 {
 		return MinKey
 	}
-	return (*me)[0].Key
+	return (*kpl)[0].Key
 }
 
-func (me *KeyPointerList) MaxKey() Key {
-	x := len(*me)
+func (kpl *KeyPointerList) MaxKey() Key {
+	x := len(*kpl)
 	if x == 0 {
 		return MaxKey
 	}
-	return (*me)[x-1].Key
+	return (*kpl)[x-1].Key
 }
 
-func (me *KeyPointerList) AsSlice() []byte {
+func (kpl *KeyPointerList) AsSlice() []byte {
 	buf := []byte{}
-	l := me.Len()
+	l := kpl.Len()
 	buf = append(buf, uint16ToSlice(uint16(l))...)
 	for i := 0; i < l; i++ {
-		buf = append(buf, (*me)[i].AsSlice()...)
+		buf = append(buf, (*kpl)[i].AsSlice()...)
 	}
 	return buf
 }
 
 // Implement sort.Interface
-func (me *KeyPointerList) Len() int {
-	return len(*me)
+func (kpl *KeyPointerList) Len() int {
+	return len(*kpl)
 }
 
-func (me *KeyPointerList) Less(i, j int) bool {
-	return (*me)[i].Cmp((*me)[j]) == -1
+func (kpl *KeyPointerList) Less(i, j int) bool {
+	return (*kpl)[i].Cmp((*kpl)[j]) == -1
 }
 
-func (me *KeyPointerList) Swap(i, j int) {
-	tp := (*me)[i]
-	(*me)[i] = (*me)[j]
-	(*me)[j] = tp
+func (kpl *KeyPointerList) Swap(i, j int) {
+	tp := (*kpl)[i]
+	(*kpl)[i] = (*kpl)[j]
+	(*kpl)[j] = tp
 }
