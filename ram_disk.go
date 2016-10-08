@@ -10,6 +10,7 @@ type RAMDisk struct {
 	pos    uint64
 }
 
+// NewRAMDisk creates and returns a new RAMDisk of the supplied size in bytes
 func NewRAMDisk(sizeInBytes int64) *RAMDisk {
 	inst := &RAMDisk{
 		buffer: make([]byte, sizeInBytes),
@@ -18,46 +19,53 @@ func NewRAMDisk(sizeInBytes int64) *RAMDisk {
 	return inst
 }
 
-func (me *RAMDisk) Read(p []byte) (int, error) {
+// Read reads from the current position into the supplied slice of bytes, returning the
+// number of bytes read and/or any errors.
+func (rd *RAMDisk) Read(p []byte) (int, error) {
 	var err error
 	readlen := uint64(len(p))
-	if me.pos+readlen > uint64(len(me.buffer)) {
-		readlen = uint64(len(me.buffer)) - me.pos
+	if rd.pos+readlen > uint64(len(rd.buffer)) {
+		readlen = uint64(len(rd.buffer)) - rd.pos
 		err = errors.New("Read truncated, disk end reached")
 	}
 	for i := uint64(0); i < readlen; i++ {
-		p[i] = me.buffer[me.pos+i]
+		p[i] = rd.buffer[rd.pos+i]
 	}
 	return int(readlen), err
 }
 
-func (me *RAMDisk) Write(p []byte) (int, error) {
+// Read writes at the current position from the supplied slice of bytes, returning the
+// number of bytes written and/or any errors.
+func (rd *RAMDisk) Write(p []byte) (int, error) {
 	var err error
 	writelen := uint64(len(p))
-	if me.pos+writelen > uint64(len(me.buffer)) {
-		writelen = uint64(len(me.buffer)) - me.pos
+	if rd.pos+writelen > uint64(len(rd.buffer)) {
+		writelen = uint64(len(rd.buffer)) - rd.pos
 		err = errors.New("Write truncated, disk end reached")
 	}
 	for i := uint64(0); i < writelen; i++ {
-		me.buffer[me.pos+i] = p[i]
+		rd.buffer[rd.pos+i] = p[i]
 	}
-	me.pos += writelen
+	rd.pos += writelen
 	return int(writelen), err
 }
 
-func (me *RAMDisk) Seek(offset int64, whence int) (int64, error) {
-	p := int64(me.pos)
+// Seek moves the current position to the supplied offset, using the second parameter to
+// denote the type of seek: 0 - start of disk, 1 - current position, 2 - end of disk.
+// Returns the new position from the start of the disk, and/or any errors.
+func (rd *RAMDisk) Seek(offset int64, whence int) (int64, error) {
+	p := int64(rd.pos)
 	switch whence {
 	case 0:
 		p = offset
 	case 1:
 		p += offset
 	case 2:
-		p = int64(len(me.buffer)) + offset
+		p = int64(len(rd.buffer)) + offset
 	}
-	if p < 0 || p > int64(len(me.buffer)-1) {
-		return int64(me.pos), errors.New("Cannot seek outside of disk limits")
+	if p < 0 || p > int64(len(rd.buffer)-1) {
+		return int64(rd.pos), errors.New("Cannot seek outside of disk limits")
 	}
-	me.pos = uint64(p)
+	rd.pos = uint64(p)
 	return p, nil
 }

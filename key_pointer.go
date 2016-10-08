@@ -10,7 +10,7 @@ type KeyPointer struct {
 	BlockAddress uint64
 }
 
-// Return a new KeyPointer parsed from the supplied buffer
+// NewKeyPointerFromBuffer returns a new KeyPointer parsed from the supplied buffer
 func NewKeyPointerFromBuffer(buffer []byte) KeyPointer {
 	key := [16]byte{}
 	copy(key[:], buffer[0:16])
@@ -24,12 +24,12 @@ func NewKeyPointerFromBuffer(buffer []byte) KeyPointer {
 	return x
 }
 
-// Return true if the Key of this KeyPointer is 'nil' (0x00000000000000000000000000000000)
+// Nil returns true if the Key of this KeyPointer is 'nil' (0x00000000000000000000000000000000)
 func (kp KeyPointer) Nil() bool {
 	return kp.Key.Nil()
 }
 
-// Compare the Key of this KeyPointer to the Key of another KeyPointer and return:
+// Cmp compares the Key of this KeyPointer to the Key of another KeyPointer and return:
 // * -1 If this Key is less than the other Key
 // * 0 If this Key is equal to the other Key
 // * +1 If this Key is more than the other Key
@@ -37,7 +37,7 @@ func (kp KeyPointer) Cmp(other KeyPointer) int {
 	return kp.Key.Cmp(other.Key)
 }
 
-// Return this KeyPointer seriaised as a []byte of length 24.
+// AsSlice returns this KeyPointer seriaised as a []byte of length 24.
 func (kp KeyPointer) AsSlice() []byte {
 	buf := kp.Key.AsSlice()
 	buf = append(buf, uint64ToSlice(kp.BlockAddress)...)
