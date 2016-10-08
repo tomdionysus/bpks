@@ -7,14 +7,14 @@
 
 An efficient block IO Key Store in golang.
 
-bpks is a B+Tree-like that stores arbitary key/value pairs on any device or file that supports io.ReadWriteSeeker.
+bpks is package that stores arbitary key/value pairs on any device or file that supports io.ReadWriteSeeker.
+
+**CAVEAT** bpks is currently ALPHA and should not be used in production. The major missing component is a real free space manager (allocator/deallocator) for blocks.
 
 * 128-bit or String Keys
 * Arbitary []byte data
 
-## Status / TODO
-
-bpks is currently ALPHA and should not be used in production. The major missing component is a real free space manager (allocator/deallocator) for blocks.
+## TODO
 
 Done:
 
