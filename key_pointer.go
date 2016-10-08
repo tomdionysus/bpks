@@ -17,11 +17,6 @@ func NewKeyPointerFromBuffer(buffer []byte) KeyPointer {
 	return x
 }
 
-// Nil returns true if the Key of this KeyPointer is 'nil' (0x00000000000000000000000000000000)
-func (kp KeyPointer) Nil() bool {
-	return kp.Key.Nil()
-}
-
 // Cmp compares the Key of this KeyPointer to the Key of another KeyPointer and returns:
 // * -1 If this Key is less than the other Key
 // * 0 If this Key is equal to the other Key

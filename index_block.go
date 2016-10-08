@@ -1,7 +1,7 @@
 package bpks
 
 import (
-	"fmt"
+// "fmt"
 )
 
 // Blocks are BlockSize Bytes.
@@ -95,7 +95,7 @@ func (ib *IndexBlock) Add(kp KeyPointer) error {
 		BlockAddress:   ib.BPKS.Allocate(),
 		KeyPointerList: &rightkpl,
 	}
-	fmt.Printf("-- Split Index Block %d -> %d / %d\n", ib.BlockAddress, left.BlockAddress, right.BlockAddress)
+	// fmt.Printf("-- Split Index Block %d -> %d / %d\n", ib.BlockAddress, left.BlockAddress, right.BlockAddress)
 	left.Min = ib.Min
 	right.Max = ib.Max
 	err := ib.BPKS.WriteIndexBlock(&left)
@@ -117,10 +117,10 @@ func (ib *IndexBlock) Add(kp KeyPointer) error {
 // Find finds and returns the KeyPointer associated with the supplied key in this IndexBlock or one of
 // its children, returning the KeyPointer, whether the key was found, and an error if any.
 func (ib *IndexBlock) Find(key Key) (KeyPointer, bool, error) {
-	fmt.Printf("IndexBlock.Find %d: %s\n", ib.BlockAddress, key)
+	// fmt.Printf("IndexBlock.Find %d: %s\n", ib.BlockAddress, key)
 	// If there is a minimum and the key is less than the minimum
 	if ib.Min.BlockAddress != 0 && ib.Min.Key.Cmp(key) == -1 {
-		fmt.Printf("- Min exists and key is less than min %s\n", ib.Min.Key)
+		// fmt.Printf("- Min exists and key is less than min %s\n", ib.Min.Key)
 		left, err := ib.BPKS.ReadIndexBlock(ib.Min.BlockAddress)
 		if err != nil {
 			return KeyPointer{}, false, err
@@ -130,7 +130,7 @@ func (ib *IndexBlock) Find(key Key) (KeyPointer, bool, error) {
 
 	// If there is a maximum and the key is more than the maximum
 	if ib.Max.BlockAddress != 0 && ib.Max.Key.Cmp(key) == 1 {
-		fmt.Printf("- Max exists and key is more than max %s\n", ib.Max.Key)
+		// fmt.Printf("- Max exists and key is more than max %s\n", ib.Max.Key)
 		right, err := ib.BPKS.ReadIndexBlock(ib.Max.BlockAddress)
 		if err != nil {
 			return KeyPointer{}, false, err
@@ -147,7 +147,7 @@ func (ib *IndexBlock) Find(key Key) (KeyPointer, bool, error) {
 // its children, returning the removed KeyPointer, whether the key was found, and an error if any.
 func (ib *IndexBlock) Remove(key Key) (KeyPointer, bool, error) {
 	// If there is a minimum and the key is less than the minimum
-	if !ib.Min.Nil() && ib.Min.Key.Cmp(key) == -1 {
+	if ib.Min.BlockAddress != 0 && ib.Min.Key.Cmp(key) == -1 {
 		left, err := ib.BPKS.ReadIndexBlock(ib.Min.BlockAddress)
 		if err != nil {
 			return KeyPointer{}, false, err
@@ -156,7 +156,7 @@ func (ib *IndexBlock) Remove(key Key) (KeyPointer, bool, error) {
 	}
 
 	// If there is a maximum and the key is more than the maximum
-	if !ib.Max.Nil() && ib.Max.Key.Cmp(key) == 1 {
+	if ib.Max.BlockAddress != 0 && ib.Max.Key.Cmp(key) == 1 {
 		right, err := ib.BPKS.ReadIndexBlock(ib.Max.BlockAddress)
 		if err != nil {
 			return KeyPointer{}, false, err
