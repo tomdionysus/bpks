@@ -80,3 +80,85 @@ func TestKeyPointerListRemove(t *testing.T) {
 	assert.Equal(t, 0, len(*lst))
 	assert.Equal(t, kp.Key, key)
 }
+
+func TestKeyPointerListRemoveMidSet(t *testing.T) {
+	lst := &KeyPointerList{}
+
+	k := KeyPointer{
+		Key:          Key{0, 0, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		BlockAddress: 81723123,
+	}
+	lst.Add(k)
+
+	assert.Equal(t, 1, len(*lst))
+
+	k2 := KeyPointer{
+		Key:          Key{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 0, 0, 0},
+		BlockAddress: 189247182,
+	}
+	lst.Add(k2)
+
+	assert.Equal(t, 2, len(*lst))
+
+	k3 := KeyPointer{
+		Key:          Key{1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		BlockAddress: 982374223,
+	}
+	lst.Add(k3)
+
+	assert.Equal(t, 3, len(*lst))
+
+	kp, found := lst.Remove(k2.Key)
+	assert.True(t, found)
+	assert.Equal(t, 2, len(*lst))
+	assert.Equal(t, k2, kp)
+
+	kp, found = lst.Find(k.Key)
+	assert.True(t, found)
+	assert.Equal(t, k, kp)
+
+	kp, found = lst.Find(k3.Key)
+	assert.True(t, found)
+	assert.Equal(t, k3, kp)
+}
+
+func TestKeyPointerListRemoveFirst(t *testing.T) {
+	lst := &KeyPointerList{}
+
+	k := KeyPointer{
+		Key:          Key{0, 0, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		BlockAddress: 81723123,
+	}
+	lst.Add(k)
+
+	assert.Equal(t, 1, len(*lst))
+
+	k2 := KeyPointer{
+		Key:          Key{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 0, 0, 0},
+		BlockAddress: 189247182,
+	}
+	lst.Add(k2)
+
+	assert.Equal(t, 2, len(*lst))
+
+	k3 := KeyPointer{
+		Key:          Key{1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		BlockAddress: 982374223,
+	}
+	lst.Add(k3)
+
+	assert.Equal(t, 3, len(*lst))
+
+	kp, found := lst.Remove(k.Key)
+	assert.True(t, found)
+	assert.Equal(t, 2, len(*lst))
+	assert.Equal(t, k, kp)
+
+	kp, found = lst.Find(k2.Key)
+	assert.True(t, found)
+	assert.Equal(t, k2, kp)
+
+	kp, found = lst.Find(k3.Key)
+	assert.True(t, found)
+	assert.Equal(t, k3, kp)
+}
