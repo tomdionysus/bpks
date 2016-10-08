@@ -46,11 +46,11 @@ func NewDataBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *Dat
 }
 
 // AsSlice serialises and returns the DataBlock as a []byte, padded to BlockSize.
-func (me *DataBlock) AsSlice() []byte {
-	buf := uint64ToSlice(me.Prev)
-	buf = append(buf, uint64ToSlice(me.Next)...)
-	buf = append(buf, uint16ToSlice(uint16(len(me.Data)))...)
-	buf = append(buf, me.Data...)
+func (db *DataBlock) AsSlice() []byte {
+	buf := uint64ToSlice(db.Prev)
+	buf = append(buf, uint64ToSlice(db.Next)...)
+	buf = append(buf, uint16ToSlice(uint16(len(db.Data)))...)
+	buf = append(buf, db.Data...)
 	if len(buf) < BlockSize {
 		x := make([]byte, BlockSize-len(buf))
 		buf = append(buf, x...)
