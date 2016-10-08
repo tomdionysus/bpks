@@ -18,9 +18,9 @@ type DataBlock struct {
 	// BlockAddress is the uint64 block address of this DataBlock
 	BlockAddress uint64
 
-	// Prev is the uint64 block address of the previous DataBlock in this chain, or nil
+	// Prev is the uint64 block address of the previous DataBlock in this chain, or 0
 	Prev uint64
-	// Next is the uint64 block address of the prevnextious DataBlock in this chain, or nil
+	// Next is the uint64 block address of the next DataBlock in this chain, or 0
 	Next uint64
 	// Data is data contained in this DataBlock, of maximum length BlockSize - 18
 	Data []byte
