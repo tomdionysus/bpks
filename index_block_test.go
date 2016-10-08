@@ -1,11 +1,12 @@
 package bpks
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestIndexBlockAdd(t *testing.T) {
+func xTestIndexBlockAdd(t *testing.T) {
 	disk := NewRAMDisk(4 * 1024 * 1024)
 	kvs := New(disk)
 	err := kvs.Format()
@@ -50,4 +51,37 @@ func TestIndexBlockAdd(t *testing.T) {
 	assert.Equal(t, k.BlockAddress, (*kvs.Root.KeyPointerList)[1].BlockAddress)
 	assert.Equal(t, k3.Key, (*kvs.Root.KeyPointerList)[2].Key)
 	assert.Equal(t, k3.BlockAddress, (*kvs.Root.KeyPointerList)[2].BlockAddress)
+}
+
+func TestIndexBlockAddSplit(t *testing.T) {
+	fmt.Printf("\n\n------------------\n\n")
+	disk := NewRAMDisk(4 * 1024 * 1024)
+	kvs := New(disk)
+	err := kvs.Format()
+	assert.Nil(t, err)
+	kvs.Mount()
+
+	for i := 0; i < 256; i++ {
+		k := KeyPointer{
+			Key:          NewKeyRandom(),
+			BlockAddress: 81723123,
+		}
+		err = kvs.Root.Add(k)
+		assert.Nil(t, err)
+	}
+
+	kv3 := Key{1, 1, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	k3 := KeyPointer{
+		Key:          kv3,
+		BlockAddress: 81723123,
+	}
+	err = kvs.Root.Add(k3)
+
+	assert.Equal(t, 84, len(*kvs.Root.KeyPointerList))
+
+	kp, found, err := kvs.Root.Find(kv3)
+	assert.Nil(t, err)
+	assert.True(t, found)
+	assert.Equal(t, kv3, kp.Key)
+	fmt.Printf("\n\n------------------\n\n")
 }

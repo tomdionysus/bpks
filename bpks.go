@@ -4,7 +4,7 @@ package bpks
 import (
 	"bytes"
 	"errors"
-	"fmt"
+	// "fmt"
 	"io"
 )
 
@@ -152,69 +152,69 @@ func (bp *BPKS) Get(key string) ([]byte, bool, error) {
 // ReadIndexBlock reads and returns the IndexBlock at the specified block address, returning
 // a pointer to the parsed IndexBlock and/or an error if any.
 func (bp *BPKS) ReadIndexBlock(blockAddress uint64) (*IndexBlock, error) {
-	fmt.Printf("Reading Index Block at address %d (offset %d)\n", blockAddress, blockAddress*BlockSize)
+	// fmt.Printf("Reading Index Block at address %d (offset %d)\n", blockAddress, blockAddress*BlockSize)
 	_, err := bp.Device.Seek(int64(blockAddress*BlockSize), 0)
 	if err != nil {
 		return nil, err
 	}
 	buffer := [BlockSize]byte{}
-	fmt.Printf("- Reading BlockSize Bytes\n")
-	c, err := bp.Device.Read(buffer[:])
+	// fmt.Printf("- Reading BlockSize Bytes\n")
+	_, err = bp.Device.Read(buffer[:])
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("- Read %d bytes\n", c)
+	// fmt.Printf("- Read %d bytes\n", c)
 	return NewIndexBlockFromBuffer(bp, blockAddress, buffer[:]), nil
 }
 
 // WriteIndexBlock writes the specified IndexBlock to its block address, returning
 // nil on success or an error.
 func (bp *BPKS) WriteIndexBlock(block *IndexBlock) error {
-	fmt.Printf("Writing Index Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
+	// fmt.Printf("Writing Index Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
 	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
 	if err != nil {
 		return err
 	}
 	buffer := block.AsSlice()
-	c, err := bp.Device.Write(buffer[:])
+	_, err = bp.Device.Write(buffer[:])
 	if err != nil {
 		return err
 	}
-	fmt.Printf("- Wrote %d bytes\n", c)
+	// fmt.Printf("- Wrote %d bytes\n", c)
 	return nil
 }
 
 // ReadDataBlock reads and returns the DataBlock at the specified block address, returning
 // a pointer to the parsed DataBlock and/or an error if any.
 func (bp *BPKS) ReadDataBlock(blockAddress uint64) (*DataBlock, error) {
-	fmt.Printf("Reading Data Block at address %d (offset %d)\n", blockAddress, blockAddress*BlockSize)
+	// fmt.Printf("Reading Data Block at address %d (offset %d)\n", blockAddress, blockAddress*BlockSize)
 	_, err := bp.Device.Seek(int64(blockAddress*BlockSize), 0)
 	if err != nil {
 		return nil, err
 	}
 	buffer := [BlockSize]byte{}
-	fmt.Printf("- Reading %d Bytes\n", BlockSize)
-	c, err := bp.Device.Read(buffer[:])
+	// fmt.Printf("- Reading %d Bytes\n", BlockSize)
+	_, err = bp.Device.Read(buffer[:])
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("- Read %d bytes\n", c)
+	// fmt.Printf("- Read %d bytes\n", c)
 	return NewDataBlockFromBuffer(bp, blockAddress, buffer[:]), nil
 }
 
 // WriteDataBlock writes the specified DataBlock to its block address, returning
 // nil on success or an error.
 func (bp *BPKS) WriteDataBlock(block *DataBlock) error {
-	fmt.Printf("Writing Data Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
+	// fmt.Printf("Writing Data Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
 	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
 	if err != nil {
 		return err
 	}
 	buffer := block.AsSlice()
-	c, err := bp.Device.Write(buffer[:])
+	_, err = bp.Device.Write(buffer[:])
 	if err != nil {
 		return err
 	}
-	fmt.Printf("- Wrote %d bytes\n", c)
+	// fmt.Printf("- Wrote %d bytes\n", c)
 	return nil
 }

@@ -11,9 +11,8 @@ type KeyPointerList []KeyPointer
 // NewKeyPointerListFromBuffer returns a pointer to a new KeyPointerList, parsed from the supplied
 // buffer.
 func NewKeyPointerListFromBuffer(buffer []byte) *KeyPointerList {
-	fmt.Printf("-- Init KeyPointerList from buffer len %d\n", len(buffer))
 	ln := int(sliceToUint16(buffer[0:2]))
-	fmt.Printf("-- Init KeyPointerList from buffer %d entries\n", ln)
+	// fmt.Printf("-- Init KeyPointerList from buffer len %d bytes %d entries\n", len(buffer), ln)
 	x := KeyPointerList{}
 	for i := 0; i < ln; i++ {
 		x = append(x, NewKeyPointerFromBuffer(buffer[2+(i*24):2+((i+1)*24)]))
@@ -23,7 +22,7 @@ func NewKeyPointerListFromBuffer(buffer []byte) *KeyPointerList {
 
 // Add adds the supplied KeyPointer to this list and sorts the list.
 func (kpl *KeyPointerList) Add(kp KeyPointer) {
-	fmt.Printf("KeyPointerList.Add %s -> %d\n", kp.Key, kp.BlockAddress)
+	// fmt.Printf("KeyPointerList.Add %s -> %d\n", kp.Key, kp.BlockAddress)
 	*kpl = append(*kpl, kp)
 	sort.Sort(kpl)
 }

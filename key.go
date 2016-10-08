@@ -3,6 +3,7 @@ package bpks
 import (
 	"bytes"
 	"crypto/md5"
+	"crypto/rand"
 	"fmt"
 )
 
@@ -15,9 +16,23 @@ var MinKey = Key{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 // MaxKey is the maximum possible Key
 var MaxKey = Key{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 
+// NewKeyFromBuffer returns a new Key parsed from the supplied buffer
+func NewKeyFromBuffer(buffer []byte) Key {
+	x := Key{}
+	copy(x[:], buffer[0:16])
+	return x
+}
+
 // NewKeyFromStringMD5 returns a new Key set to the 128 bit MD5 hash of the supplied string
 func NewKeyFromStringMD5(str string) Key {
 	return Key(md5.Sum([]byte(str)))
+}
+
+// NewKeyRandom returns a cryptographically generated random Key.
+func NewKeyRandom() Key {
+	key := make([]byte, 16)
+	_, _ = rand.Read(key)
+	return NewKeyFromBuffer(key)
 }
 
 // String returns the Key bytes as a string in lowercase hexadecimal format

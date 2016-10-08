@@ -1,9 +1,5 @@
 package bpks
 
-import (
-	"fmt"
-)
-
 // KeyPointer associates a Key with a uint64 block address.
 type KeyPointer struct {
 	Key          Key
@@ -18,9 +14,6 @@ func NewKeyPointerFromBuffer(buffer []byte) KeyPointer {
 		Key:          Key(key),
 		BlockAddress: sliceToUint64(buffer[16:24]),
 	}
-
-	fmt.Printf("-- Init KeyPointer from buffer %s -> %d\n", x.Key, x.BlockAddress)
-
 	return x
 }
 
