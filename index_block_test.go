@@ -83,5 +83,19 @@ func TestIndexBlockAddSplit(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, found)
 	assert.Equal(t, kv3, kp.Key)
+
+	kv4 := Key{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
+	k4 := KeyPointer{
+		Key:          kv4,
+		BlockAddress: 81723123,
+	}
+	err = kvs.Root.Add(k4)
+
+	assert.Equal(t, 84, len(*kvs.Root.KeyPointerList))
+
+	kp, found, err = kvs.Root.Find(kv4)
+	assert.Nil(t, err)
+	assert.True(t, found)
+	assert.Equal(t, kv4, kp.Key)
 	fmt.Printf("\n\n------------------\n\n")
 }
