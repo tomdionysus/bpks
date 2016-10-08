@@ -1,4 +1,4 @@
-// Package bpks implements a B+Tree Key Store that stores key/value pairs on an underlying io.ReadWriteSeeker device.
+// Package bpks implements a B+Tree-like Key Store that stores key/value pairs on an underlying io.ReadWriteSeeker device.
 //
 // bpks is currently ALPHA and should not be used in production.
 package bpks
