@@ -13,7 +13,7 @@ bpks is a B+Tree that stores arbitary key/value pairs on any device or file that
 
 ## Status / TODO
 
-bpks is ALPHA and should not be used in production. The major missing component is a real free space manager (allocator/deallocator) for blocks.
+bpks is currently ALPHA and should not be used in production. The major missing component is a real free space manager (allocator/deallocator) for blocks.
 
 Done:
 
