@@ -1,6 +1,7 @@
 # bpks
 
 [![Build Status](https://travis-ci.org/tomdionysus/bpks.svg?branch=master)](https://travis-ci.org/tomdionysus/bpks)
+[![Coverage Status](https://coveralls.io/repos/tomdionysus/bpks/badge.svg?branch=master&service=github)](https://coveralls.io/github/tomdionysus/bpks?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tomdionysus/bpks)](https://goreportcard.com/report/github.com/tomdionysus/bpks)
 [![GoDoc](https://godoc.org/github.com/tomdionysus/bpks?status.svg)](https://godoc.org/github.com/tomdionysus/bpks)
 
