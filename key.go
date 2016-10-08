@@ -21,25 +21,25 @@ func NewKeyFromStringMD5(str string) Key {
 }
 
 // String returns the Key bytes as a string in lowercase hexadecimal format
-func (me Key) String() string {
-	return fmt.Sprintf("%02x", me[:])
+func (key Key) String() string {
+	return fmt.Sprintf("%02x", key[:])
 }
 
 // Nil returns true if this Key equals MinKey (nil Key)
-func (me Key) Nil() bool {
-	return bytes.Compare(me[:], MinKey[:]) == 0
+func (key Key) Nil() bool {
+	return bytes.Compare(key[:], MinKey[:]) == 0
 }
 
 // Cmp compares the Key to another Key and returns:
 // * -1 If this Key is less than the other Key
 // * 0 If this Key is equal to the other Key
 // * +1 If this Key is more than the other Key
-func (me Key) Cmp(other Key) int {
-	return bytes.Compare(me[:], other[:])
+func (key Key) Cmp(other Key) int {
+	return bytes.Compare(key[:], other[:])
 }
 
 // AsSlice returns this Key seriaised as a []byte of length 16.
-func (me Key) AsSlice() []byte {
-	x := [16]byte(me)
+func (key Key) AsSlice() []byte {
+	x := [16]byte(key)
 	return x[:]
 }
