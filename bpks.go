@@ -85,23 +85,7 @@ func (bp *BPKS) Allocate() uint64 {
 
 // Deallocate frees the specified block address for reuse.
 func (bp *BPKS) Deallocate(blockAddress uint64) {
-	panic("Not Implemented")
 }
-
-// Low Level KeyPointer Funcs
-
-// Add writes the specified KeyPointer to the keystore
-func (bp *BPKS) Add(kp KeyPointer) error {
-	return bp.Root.Add(kp)
-}
-
-// Find finds the specified Key in the keystore, returning its KeyPointer if found, or
-// an empty KeyPointer and false if not
-func (bp *BPKS) Find(key Key) (KeyPointer, bool, error) {
-	return bp.Root.Find(key)
-}
-
-// High Level Storage Functions
 
 // Set writes a key/value pair of the MD5 of the supplied string, and data, to the key store,
 // returning nil on success or an error.
@@ -120,7 +104,7 @@ func (bp *BPKS) Set(key string, data []byte) error {
 		BlockAddress: firstDataBlockAddress,
 		Data:         data,
 	}
-	err := bp.Add(kp)
+	err := bp.Root.Add(kp)
 	if err != nil {
 		return err
 	}
@@ -131,10 +115,10 @@ func (bp *BPKS) Set(key string, data []byte) error {
 	return nil
 }
 
-// Get finds and reads the value of they which is the MD5 of the given string, returning
+// Get finds and reads the value of the Key which is the MD5 of the given string, returning
 // the data, whether they key was found, and/or an error if any.
 func (bp *BPKS) Get(key string) ([]byte, bool, error) {
-	kp, found, err := bp.Find(NewKeyFromStringMD5(key))
+	kp, found, err := bp.Root.Find(NewKeyFromStringMD5(key))
 	if err != nil {
 		return nil, false, err
 	}
@@ -147,6 +131,21 @@ func (bp *BPKS) Get(key string) ([]byte, bool, error) {
 	}
 	// TODO: Read multi-block data
 	return db.Data, true, nil
+}
+
+// Delete finds and deletes the Key which is the MD5 of the given string and its value,
+// returning whether they key was found and removed, and/or an error if any.
+func (bp *BPKS) Delete(key string) (bool, error) {
+	kp, found, err := bp.Root.Remove(NewKeyFromStringMD5(key))
+	if err != nil {
+		return false, err
+	}
+	if !found {
+		return false, nil
+	}
+	bp.Deallocate(kp.BlockAddress)
+	// TODO: Read multi-block data
+	return true, nil
 }
 
 // IO Funcs

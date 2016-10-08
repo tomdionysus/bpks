@@ -67,3 +67,26 @@ func TestBPKSGetNotFound(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, found)
 }
+
+func TestBPKSSetDelete(t *testing.T) {
+	disk := NewRAMDisk(4 * 1024 * 1024)
+	bpks := New(disk)
+	err := bpks.Format()
+	assert.Nil(t, err)
+
+	err = bpks.Set("testing!", []byte("Hello World!"))
+	assert.Nil(t, err)
+
+	dat, found, err := bpks.Get("testing!")
+	assert.Nil(t, err)
+	assert.True(t, found)
+	assert.Equal(t, "Hello World!", string(dat))
+
+	found, err = bpks.Delete("testing!")
+	assert.Nil(t, err)
+	assert.True(t, found)
+
+	_, found, err = bpks.Get("testing!")
+	assert.Nil(t, err)
+	assert.False(t, found)
+}
