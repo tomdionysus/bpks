@@ -130,6 +130,35 @@ func (me *IndexBlock) Find(key Key) (KeyPointer, bool, error) {
 	return kp, found, nil
 }
 
+func (me *IndexBlock) Remove(key Key) (KeyPointer, bool, error) {
+	// If there is a minimum and the key is less than the minimum
+	if !me.Min.Nil() && me.Min.Key.Cmp(key) == -1 {
+		left, err := me.BPKS.ReadIndexBlock(me.Min.BlockAddress)
+		if err != nil {
+			return KeyPointer{}, false, err
+		}
+		return left.Remove(key)
+	}
+
+	// If there is a maximum and the key is more than the maximum
+	if !me.Max.Nil() && me.Max.Key.Cmp(key) == 1 {
+		right, err := me.BPKS.ReadIndexBlock(me.Max.BlockAddress)
+		if err != nil {
+			return KeyPointer{}, false, err
+		}
+		return right.Remove(key)
+	}
+
+	// Remove in this indexblock
+	kp, found := me.KeyPointerList.Remove(key)
+
+	if found {
+		me.BPKS.WriteIndexBlock(me)
+	}
+
+	return kp, found, nil
+}
+
 func (me *IndexBlock) AsSlice() []byte {
 	buf := me.Min.AsSlice()
 	buf = append(buf, me.Max.AsSlice()...)

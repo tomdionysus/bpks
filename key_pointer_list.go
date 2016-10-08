@@ -35,6 +35,22 @@ func (me *KeyPointerList) Find(key Key) (KeyPointer, bool) {
 	return KeyPointer{}, false
 }
 
+func (me *KeyPointerList) Remove(key Key) (KeyPointer, bool) {
+	fmt.Printf("KeyPointerList.Remove %s\n", key)
+	l := len(*me)
+	i := sort.Search(l, func(i int) bool { return (*me)[i].Key.Cmp(key) != -1 })
+	if i >= l {
+		return KeyPointer{}, false
+	}
+
+	kpout := (*me)[i]
+	nsl := (*me)[:i]
+	nsl = append(nsl, (*me)[i+1:]...)
+	*me = KeyPointerList(nsl)
+
+	return kpout, true
+}
+
 func (me *KeyPointerList) MinKey() Key {
 	if len(*me) == 0 {
 		return MinKey

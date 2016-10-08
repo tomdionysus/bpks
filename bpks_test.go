@@ -56,3 +56,14 @@ func TestBPKSSetGet(t *testing.T) {
 	assert.True(t, found)
 	assert.Equal(t, "Hello World!", string(dat))
 }
+
+func TestBPKSGetNotFound(t *testing.T) {
+	disk := NewRAMDisk(4 * 1024 * 1024)
+	bpks := New(disk)
+	err := bpks.Format()
+	assert.Nil(t, err)
+
+	_, found, err := bpks.Get("testing!")
+	assert.Nil(t, err)
+	assert.False(t, found)
+}
