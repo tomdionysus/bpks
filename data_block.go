@@ -9,9 +9,9 @@ import (
 // 0 - Prev 8 bytes
 // 8 - Next 8 bytes
 // 16 - Length 2 bytes
-// 18 - Data max 4078 bytes
+// 18 - Data max (BlockSize - 18) bytes
 
-// DataBlock represents a 4078 byte data block with block addresses of the previous and next blocks.
+// DataBlock represents a (BlockSize - 18) byte data block with block addresses of the previous and next blocks.
 type DataBlock struct {
 	// BPKS is a pointer to the BPKS that owns this DataBlock
 	BPKS *BPKS
