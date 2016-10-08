@@ -4,19 +4,18 @@ import (
 	"fmt"
 )
 
-// KeyPointer associates a Key with a block address
-// Length 24 bytes.
-
+// KeyPointer associates a Key with a uint64 block address.
 type KeyPointer struct {
 	Key          Key
 	BlockAddress uint64
 }
 
+// Return a new KeyPointer parsed from the supplied buffer
 func NewKeyPointerFromBuffer(buffer []byte) KeyPointer {
-	keyarr := [16]byte{}
-	copy(keyarr[:], buffer[0:16])
+	key := [16]byte{}
+	copy(key[:], buffer[0:16])
 	x := KeyPointer{
-		Key:          Key(keyarr),
+		Key:          Key(key),
 		BlockAddress: sliceToUint64(buffer[16:24]),
 	}
 
@@ -25,16 +24,22 @@ func NewKeyPointerFromBuffer(buffer []byte) KeyPointer {
 	return x
 }
 
-func (me KeyPointer) Nil() bool {
-	return me.Key.Nil()
+// Return true if the Key of this KeyPointer is 'nil' (0x00000000000000000000000000000000)
+func (kp KeyPointer) Nil() bool {
+	return kp.Key.Nil()
 }
 
-func (me KeyPointer) Cmp(other KeyPointer) int {
-	return me.Key.Cmp(other.Key)
+// Compare the Key of this KeyPointer to the Key of another KeyPointer and return:
+// * -1 If this Key is less than the other Key
+// * 0 If this Key is equal to the other Key
+// * +1 If this Key is more than the other Key
+func (kp KeyPointer) Cmp(other KeyPointer) int {
+	return kp.Key.Cmp(other.Key)
 }
 
-func (me KeyPointer) AsSlice() []byte {
-	buf := me.Key.AsSlice()
-	buf = append(buf, uint64ToSlice(me.BlockAddress)...)
+// Return this KeyPointer seriaised as a []byte of length 24.
+func (kp KeyPointer) AsSlice() []byte {
+	buf := kp.Key.AsSlice()
+	buf = append(buf, uint64ToSlice(kp.BlockAddress)...)
 	return buf
 }
