@@ -13,17 +13,21 @@ import (
 
 // DataBlock represents a 4078 byte data block with block addresses of the previous and next blocks.
 type DataBlock struct {
-	// Not Serialized
-	BPKS         *BPKS
+	// BPKS is a pointer to the BPKS that owns this DataBlock
+	BPKS *BPKS
+	// BlockAddress is the uint64 block address of this DataBlock
 	BlockAddress uint64
 
-	// Serialized
-	Prev   uint64
-	Next   uint64
-	Length uint16
-	Data   []byte
+	// Prev is the uint64 block address of the previous DataBlock in this chain, or nil
+	Prev uint64
+	// Next is the uint64 block address of the prevnextious DataBlock in this chain, or nil
+	Next uint64
+	// Data is data contained in this DataBlock, of maximum length BlockSize - 18
+	Data []byte
 }
 
+// NewDataBlockFromBuffer returns a pointer to a new DataBlock with the specified BPKS owner and
+// block address, parsed from the specified buffer.
 func NewDataBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *DataBlock {
 	fmt.Printf("-- Init Data Block from buffer len %d\n", len(buffer))
 	ln := sliceToUint16(buffer[16:18])
@@ -35,18 +39,17 @@ func NewDataBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *Dat
 		BlockAddress: blockAddress,
 		Prev:         sliceToUint64(buffer[0:8]),
 		Next:         sliceToUint64(buffer[8:16]),
-		Length:       ln,
 	}
 	fmt.Printf("-- Data is %d bytes long\n", ln)
 	x.Data = buffer[18 : 18+ln]
 	return x
 }
 
+// AsSlice serialises and returns the DataBlock as a []byte, padded to BlockSize.
 func (me *DataBlock) AsSlice() []byte {
-	me.Length = uint16(len(me.Data))
 	buf := uint64ToSlice(me.Prev)
 	buf = append(buf, uint64ToSlice(me.Next)...)
-	buf = append(buf, uint16ToSlice(me.Length)...)
+	buf = append(buf, uint16ToSlice(uint16(len(me.Data)))...)
 	buf = append(buf, me.Data...)
 	if len(buf) < BlockSize {
 		x := make([]byte, BlockSize-len(buf))
