@@ -11,6 +11,7 @@ type Key [16]byte
 
 // MinKey is the minimum possible, or 'nil' Key
 var MinKey = Key{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
 // MaxKey is the maximum possible Key
 var MaxKey = Key{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 
@@ -19,7 +20,7 @@ func NewKeyFromStringMD5(str string) Key {
 	return Key(md5.Sum([]byte(str)))
 }
 
-// String returns the Key bytes as a string in lowercase hexadecimal format 
+// String returns the Key bytes as a string in lowercase hexadecimal format
 func (me Key) String() string {
 	return fmt.Sprintf("%02x", me[:])
 }

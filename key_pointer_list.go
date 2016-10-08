@@ -5,8 +5,11 @@ import (
 	"sort"
 )
 
+// KeyPointerList represents a slice of KeyPointers
 type KeyPointerList []KeyPointer
 
+// NewKeyPointerListFromBuffer returns a pointer to a new KeyPointerList, parsed from the supplied
+// buffer.
 func NewKeyPointerListFromBuffer(buffer []byte) *KeyPointerList {
 	fmt.Printf("-- Init KeyPointerList from buffer len %d\n", len(buffer))
 	ln := int(sliceToUint16(buffer[0:2]))
@@ -18,12 +21,15 @@ func NewKeyPointerListFromBuffer(buffer []byte) *KeyPointerList {
 	return &x
 }
 
+// Add adds the supplied KeyPointer to this list and sorts the list.
 func (kpl *KeyPointerList) Add(kp KeyPointer) {
 	fmt.Printf("KeyPointerList.Add %s -> %d\n", kp.Key, kp.BlockAddress)
 	*kpl = append(*kpl, kp)
 	sort.Sort(kpl)
 }
 
+// Find finds the KeyPointer with the supplied Key in this list and returns that KeyPointer,
+// and whether it was found.
 func (kpl *KeyPointerList) Find(key Key) (KeyPointer, bool) {
 	fmt.Printf("KeyPointerList.Find %s\n", key)
 	l := len(*kpl)
@@ -35,6 +41,8 @@ func (kpl *KeyPointerList) Find(key Key) (KeyPointer, bool) {
 	return KeyPointer{}, false
 }
 
+// Remove finds and removes the KeyPointer with the supplied Key in this list and returns
+// that KeyPointer and whether it was found and removed.
 func (kpl *KeyPointerList) Remove(key Key) (KeyPointer, bool) {
 	fmt.Printf("KeyPointerList.Remove %s\n", key)
 	l := len(*kpl)
@@ -51,6 +59,7 @@ func (kpl *KeyPointerList) Remove(key Key) (KeyPointer, bool) {
 	return kpout, true
 }
 
+// MinKey returns the Key in the list with the smallest value.
 func (kpl *KeyPointerList) MinKey() Key {
 	if len(*kpl) == 0 {
 		return MinKey
@@ -58,6 +67,7 @@ func (kpl *KeyPointerList) MinKey() Key {
 	return (*kpl)[0].Key
 }
 
+// MaxKey returns the Key in the list with the largest value.
 func (kpl *KeyPointerList) MaxKey() Key {
 	x := len(*kpl)
 	if x == 0 {
@@ -66,6 +76,7 @@ func (kpl *KeyPointerList) MaxKey() Key {
 	return (*kpl)[x-1].Key
 }
 
+// AsSlice returns this KeyPointerList seriaised as a []byte
 func (kpl *KeyPointerList) AsSlice() []byte {
 	buf := []byte{}
 	l := kpl.Len()
@@ -77,14 +88,19 @@ func (kpl *KeyPointerList) AsSlice() []byte {
 }
 
 // Implement sort.Interface
+
+// Len returns the current length of this KeyPointerList
 func (kpl *KeyPointerList) Len() int {
 	return len(*kpl)
 }
 
+// Less compares the Keys of the KeyPointers at the indices i and j, and returns true
+// if the Key at i is less than the Key at j.
 func (kpl *KeyPointerList) Less(i, j int) bool {
 	return (*kpl)[i].Cmp((*kpl)[j]) == -1
 }
 
+// Swap swaps the values of the KeyPointers at the indices i and j.
 func (kpl *KeyPointerList) Swap(i, j int) {
 	tp := (*kpl)[i]
 	(*kpl)[i] = (*kpl)[j]
