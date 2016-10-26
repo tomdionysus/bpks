@@ -84,21 +84,30 @@ func (ib *IndexBlock) Add(kp KeyPointer) error {
 	rightkpl := KeyPointerList((*ib.KeyPointerList)[126:168])
 	c := KeyPointerList((*ib.KeyPointerList)[42:126])
 
+	leftblockAddr, err := ib.BPKS.FreeSpace.Allocate()
+	if err != nil {
+		return err
+	}
+	rightblockAddr, err := ib.BPKS.FreeSpace.Allocate()
+	if err != nil {
+		return err
+	}
+
 	// Split this index block
 	left := IndexBlock{
 		BPKS:           ib.BPKS,
-		BlockAddress:   ib.BPKS.Allocate(),
+		BlockAddress:   leftblockAddr,
 		KeyPointerList: &leftkpl,
 	}
 	right := IndexBlock{
 		BPKS:           ib.BPKS,
-		BlockAddress:   ib.BPKS.Allocate(),
+		BlockAddress:   rightblockAddr,
 		KeyPointerList: &rightkpl,
 	}
 	// fmt.Printf("-- Split Index Block %d -> %d / %d\n", ib.BlockAddress, left.BlockAddress, right.BlockAddress)
 	left.Min = ib.Min
 	right.Max = ib.Max
-	err := ib.BPKS.WriteIndexBlock(&left)
+	err = ib.BPKS.WriteIndexBlock(&left)
 	if err != nil {
 		return err
 	}

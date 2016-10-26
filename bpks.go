@@ -15,31 +15,32 @@ const BlockSize = 4096
 
 // BPKS (B+Tree Key Store) is a key-value store based around a B+Tree.
 type BPKS struct {
-	Device io.ReadWriteSeeker
-	Root   *IndexBlock
+	Device    io.ReadWriteSeeker
+	SizeBlocks uint64
+	FreeSpace *FreeSpaceBlock
+	Root      *IndexBlock
 }
 
 // BPKSHeader is the byte array "BPKS" plus a major version (0x00, 0x01)
 var BPKSHeader = []byte{0x42, 0x50, 0x4b, 0x53, 0x0, 0x1}
 
-var firstFreeBlock uint64 = 2
-
 // New returns a new BPKS attached to the specified io.ReadWriteSeeker
-func New(device io.ReadWriteSeeker) *BPKS {
+func New(device io.ReadWriteSeeker, sizeBlocks uint64) *BPKS {
 	return &BPKS{
 		Device: device,
+		SizeBlocks: uint64,
 	}
 }
 
 // Mount mounts the BPKS keystore on the attached device. An error is returned if the
 // device does not contain a formatted BPKS keystore.
 func (bp *BPKS) Mount() error {
-	// Check Header
+	// Check Header at offset 0. First two blocks are system reserved.
 	_, err := bp.Device.Seek(0, 0)
 	if err != nil {
 		return err
 	}
-	var buf = make([]byte, 6)
+	var buf = make([]byte, BlockSize*2)
 	_, err = bp.Device.Read(buf)
 	if err != nil {
 		return err
@@ -48,8 +49,15 @@ func (bp *BPKS) Mount() error {
 		return errors.New("Not a BPKS device")
 	}
 
-	// Load Index Block
-	root, err := bp.ReadIndexBlock(2)
+	// Load FreeSpace Block at blockAddress 2
+	freespace, err := bp.ReadFreeSpaceBlock(2)
+	if err != nil {
+		return err
+	}
+	bp.FreeSpace = freespace
+
+	// Load Index Block at blockAddress 3
+	root, err := bp.ReadIndexBlock(3)
 	if err != nil {
 		return err
 	}
@@ -70,21 +78,16 @@ func (bp *BPKS) Format() error {
 		return err
 	}
 
-	// TODO: SpaceBPKS
+	// Root FreeSpace Block at blockAddress 2 spanning free space from block 3 -> SizeBlocks
+	bp.FreeSpace = NewFreeSpaceBlock(bp, 2, 3, bp.SizeBlocks)
+	err = bp.WriteFreeSpaceBlock(bp.FreeSpace)
+	if err != nil {
+		return err
+	}
 
-	// Root Index Block
-	bp.Root = NewIndexBlock(bp, 2)
+	// Root Index Block at blockAddress 3 
+	bp.Root = NewIndexBlock(bp, 3)
 	return bp.WriteIndexBlock(bp.Root)
-}
-
-// Allocate gets the block address of the first free block on the device and marks it used.
-func (bp *BPKS) Allocate() uint64 {
-	firstFreeBlock++
-	return firstFreeBlock
-}
-
-// Deallocate frees the specified block address for reuse.
-func (bp *BPKS) Deallocate(blockAddress uint64) {
 }
 
 // Set writes a key/value pair of the MD5 of the supplied string, and data, to the key store,
@@ -93,7 +96,11 @@ func (bp *BPKS) Set(key string, data []byte) error {
 	// TODO: detect replace
 
 	// Write Key
-	firstDataBlockAddress := bp.Allocate()
+	firstDataBlockAddress, err := bp.FreeSpace.Allocate()
+	if err != nil {
+		return err
+	}
+
 	kp := KeyPointer{
 		Key:          NewKeyFromStringMD5(key),
 		BlockAddress: firstDataBlockAddress,
@@ -104,7 +111,7 @@ func (bp *BPKS) Set(key string, data []byte) error {
 		BlockAddress: firstDataBlockAddress,
 		Data:         data,
 	}
-	err := bp.Root.Add(kp)
+	err = bp.Root.Add(kp)
 	if err != nil {
 		return err
 	}
@@ -143,12 +150,30 @@ func (bp *BPKS) Delete(key string) (bool, error) {
 	if !found {
 		return false, nil
 	}
-	bp.Deallocate(kp.BlockAddress)
+	bp.FreeSpace.Deallocate(kp.BlockAddress)
 	// TODO: Read multi-block data
 	return true, nil
 }
 
 // IO Funcs
+
+// ReadFreeSpaceBlock reads and returns the FreeSpaceBlock at the specified block address, returning
+// a pointer to the parsed FreeSpaceBlock and/or an error if any.
+func (bp *BPKS) ReadFreeSpaceBlock(blockAddress uint64) (*FreeSpaceBlock, error) {
+	// fmt.Printf("Reading FreeSpace Block at address %d (offset %d)\n", blockAddress, blockAddress*BlockSize)
+	_, err := bp.Device.Seek(int64(blockAddress*BlockSize), 0)
+	if err != nil {
+		return nil, err
+	}
+	buffer := [BlockSize]byte{}
+	// fmt.Printf("- Reading BlockSize Bytes\n")
+	_, err = bp.Device.Read(buffer[:])
+	if err != nil {
+		return nil, err
+	}
+	// fmt.Printf("- Read %d bytes\n", c)
+	return NewFreeSpaceBlockFromBuffer(bp, blockAddress, buffer[:]), nil
+}
 
 // ReadIndexBlock reads and returns the IndexBlock at the specified block address, returning
 // a pointer to the parsed IndexBlock and/or an error if any.
@@ -168,23 +193,6 @@ func (bp *BPKS) ReadIndexBlock(blockAddress uint64) (*IndexBlock, error) {
 	return NewIndexBlockFromBuffer(bp, blockAddress, buffer[:]), nil
 }
 
-// WriteIndexBlock writes the specified IndexBlock to its block address, returning
-// nil on success or an error.
-func (bp *BPKS) WriteIndexBlock(block *IndexBlock) error {
-	// fmt.Printf("Writing Index Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
-	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
-	if err != nil {
-		return err
-	}
-	buffer := block.AsSlice()
-	_, err = bp.Device.Write(buffer[:])
-	if err != nil {
-		return err
-	}
-	// fmt.Printf("- Wrote %d bytes\n", c)
-	return nil
-}
-
 // ReadDataBlock reads and returns the DataBlock at the specified block address, returning
 // a pointer to the parsed DataBlock and/or an error if any.
 func (bp *BPKS) ReadDataBlock(blockAddress uint64) (*DataBlock, error) {
@@ -201,6 +209,40 @@ func (bp *BPKS) ReadDataBlock(blockAddress uint64) (*DataBlock, error) {
 	}
 	// fmt.Printf("- Read %d bytes\n", c)
 	return NewDataBlockFromBuffer(bp, blockAddress, buffer[:]), nil
+}
+
+// WriteFreeSpaceBlock writes the specified IndexBlock to its block address, returning
+// nil on success or an error.
+func (bp *BPKS) WriteFreeSpaceBlock(block *IndexBlock) error {
+	// fmt.Printf("Writing FreeSpace Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
+	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
+	if err != nil {
+		return err
+	}
+	buffer := block.AsSlice()
+	_, err = bp.Device.Write(buffer[:])
+	if err != nil {
+		return err
+	}
+	// fmt.Printf("- Wrote %d bytes\n", c)
+	return nil
+}
+
+// WriteIndexBlock writes the specified IndexBlock to its block address, returning
+// nil on success or an error.
+func (bp *BPKS) WriteIndexBlock(block *IndexBlock) error {
+	// fmt.Printf("Writing Index Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
+	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
+	if err != nil {
+		return err
+	}
+	buffer := block.AsSlice()
+	_, err = bp.Device.Write(buffer[:])
+	if err != nil {
+		return err
+	}
+	// fmt.Printf("- Wrote %d bytes\n", c)
+	return nil
 }
 
 // WriteDataBlock writes the specified DataBlock to its block address, returning
