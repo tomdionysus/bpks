@@ -8,7 +8,7 @@ import (
 func TestBPKSFormat(t *testing.T) {
 	disk := NewRAMDisk(4 * 1024 * 1024)
 
-	bpks := New(disk)
+	bpks := New(disk, 1024)
 
 	err := bpks.Format()
 	assert.Nil(t, err)
@@ -24,7 +24,7 @@ func TestBPKSFormat(t *testing.T) {
 func TestBPKSMountBadDevice(t *testing.T) {
 	disk := NewRAMDisk(4 * 1024 * 1024)
 
-	bpks := New(disk)
+	bpks := New(disk, 1024)
 
 	err := bpks.Mount()
 	assert.NotNil(t, err)
@@ -34,7 +34,7 @@ func TestBPKSMountBadDevice(t *testing.T) {
 func TestBPKSMountGoodDevice(t *testing.T) {
 	disk := NewRAMDisk(4 * 1024 * 1024)
 
-	bpks := New(disk)
+	bpks := New(disk, 1024)
 
 	err := bpks.Format()
 	assert.Nil(t, err)
@@ -44,7 +44,7 @@ func TestBPKSMountGoodDevice(t *testing.T) {
 
 func TestBPKSSetGet(t *testing.T) {
 	disk := NewRAMDisk(4 * 1024 * 1024)
-	bpks := New(disk)
+	bpks := New(disk, 1024)
 	err := bpks.Format()
 	assert.Nil(t, err)
 
@@ -59,7 +59,7 @@ func TestBPKSSetGet(t *testing.T) {
 
 func TestBPKSGetNotFound(t *testing.T) {
 	disk := NewRAMDisk(4 * 1024 * 1024)
-	bpks := New(disk)
+	bpks := New(disk, 1024)
 	err := bpks.Format()
 	assert.Nil(t, err)
 
@@ -70,7 +70,7 @@ func TestBPKSGetNotFound(t *testing.T) {
 
 func TestBPKSSetDelete(t *testing.T) {
 	disk := NewRAMDisk(4 * 1024 * 1024)
-	bpks := New(disk)
+	bpks := New(disk, 1024)
 	err := bpks.Format()
 	assert.Nil(t, err)
 

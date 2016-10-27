@@ -8,7 +8,7 @@ import (
 
 func xTestIndexBlockAdd(t *testing.T) {
 	disk := NewRAMDisk(4 * 1024 * 1024)
-	kvs := New(disk)
+	kvs := New(disk, 1024)
 	err := kvs.Format()
 	assert.Nil(t, err)
 	kvs.Mount()
@@ -56,7 +56,7 @@ func xTestIndexBlockAdd(t *testing.T) {
 func TestIndexBlockAddSplit(t *testing.T) {
 	fmt.Printf("\n\n------------------\n\n")
 	disk := NewRAMDisk(4 * 1024 * 1024)
-	kvs := New(disk)
+	kvs := New(disk, 1024)
 	err := kvs.Format()
 	assert.Nil(t, err)
 	kvs.Mount()

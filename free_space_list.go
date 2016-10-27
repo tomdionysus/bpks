@@ -2,6 +2,7 @@ package bpks
 
 import (
 	// "fmt"
+	"errors"
 	"sort"
 )
 
@@ -20,11 +21,26 @@ func NewFreeSpaceListFromBuffer(buffer []byte) *FreeSpaceList {
 	return &x
 }
 
-// Add adds the supplied FreeSpace to this list and sorts the list.
-func (fsl *FreeSpaceList) Add(kp FreeSpace) {
-	// fmt.Printf("FreeSpaceList.Add %s -> %d\n", kp.Key, kp.BlockAddress)
-	*fsl = append(*fsl, kp)
+// Allocate returns the next free block and updates the list
+func (fsl *FreeSpaceList) Allocate() (uint64, error) {
+	if len(*fsl) == 0 {
+		return 0, errors.New("no free space")
+	}
+	fsb := (*fsl)[0]
+	blockAddress := fsb.Min
+	fsb.Min++
+
+	// TODO: Remove fsb now full (Min==Max)?
+
+	// Resort
 	sort.Sort(fsl)
+	return blockAddress, nil
+}
+
+// Add adds the supplied FreeSpace to this list and sorts the list.
+func (fsl *FreeSpaceList) Deallocate(blockAddress uint64) error {
+	// TODO: implement
+	return nil
 }
 
 // AsSlice returns this FreeSpaceList seriaised as a []byte

@@ -15,10 +15,10 @@ const BlockSize = 4096
 
 // BPKS (B+Tree Key Store) is a key-value store based around a B+Tree.
 type BPKS struct {
-	Device    io.ReadWriteSeeker
+	Device     io.ReadWriteSeeker
 	SizeBlocks uint64
-	FreeSpace *FreeSpaceBlock
-	Root      *IndexBlock
+	FreeSpace  *FreeSpaceBlock
+	Root       *IndexBlock
 }
 
 // BPKSHeader is the byte array "BPKS" plus a major version (0x00, 0x01)
@@ -27,8 +27,8 @@ var BPKSHeader = []byte{0x42, 0x50, 0x4b, 0x53, 0x0, 0x1}
 // New returns a new BPKS attached to the specified io.ReadWriteSeeker
 func New(device io.ReadWriteSeeker, sizeBlocks uint64) *BPKS {
 	return &BPKS{
-		Device: device,
-		SizeBlocks: uint64,
+		Device:     device,
+		SizeBlocks: sizeBlocks,
 	}
 }
 
@@ -85,7 +85,7 @@ func (bp *BPKS) Format() error {
 		return err
 	}
 
-	// Root Index Block at blockAddress 3 
+	// Root Index Block at blockAddress 3
 	bp.Root = NewIndexBlock(bp, 3)
 	return bp.WriteIndexBlock(bp.Root)
 }
@@ -213,7 +213,7 @@ func (bp *BPKS) ReadDataBlock(blockAddress uint64) (*DataBlock, error) {
 
 // WriteFreeSpaceBlock writes the specified IndexBlock to its block address, returning
 // nil on success or an error.
-func (bp *BPKS) WriteFreeSpaceBlock(block *IndexBlock) error {
+func (bp *BPKS) WriteFreeSpaceBlock(block *FreeSpaceBlock) error {
 	// fmt.Printf("Writing FreeSpace Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
 	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
 	if err != nil {

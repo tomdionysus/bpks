@@ -20,11 +20,12 @@ type FreeSpaceBlock struct {
 }
 
 func (fsb *FreeSpaceBlock) Allocate() (uint64, error) {
-	return 1, nil
+	// TODO: Detect full
+	return fsb.FreeSpaceList.Allocate()
 }
 
 func (fsb *FreeSpaceBlock) Deallocate(blockaddress uint64) error {
-	return nil
+	return fsb.FreeSpaceList.Deallocate(blockaddress)
 }
 
 // NewFreeSpaceBlock returns a pointer to a new FreeSpaceBlock with the specified BPKS owner and block address, containing a
@@ -50,4 +51,16 @@ func NewFreeSpaceBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte)
 		Max:           sliceToUint64(buffer[8:16]),
 		FreeSpaceList: NewFreeSpaceListFromBuffer(buffer[24:BlockSize]),
 	}
+}
+
+// AsSlice serialises and returns the IndexBlock as a []byte, padded to BlockSize.
+func (fsb *FreeSpaceBlock) AsSlice() []byte {
+	buf := uint64ToSlice(fsb.Min)
+	buf = append(buf, uint64ToSlice(fsb.Min)...)
+	buf = append(buf, fsb.FreeSpaceList.AsSlice()...)
+	if len(buf) < BlockSize {
+		x := make([]byte, BlockSize-len(buf))
+		buf = append(buf, x...)
+	}
+	return buf
 }
