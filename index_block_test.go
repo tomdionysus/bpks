@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func xTestIndexBlockAdd(t *testing.T) {
+func TestIndexBlockAdd(t *testing.T) {
 	disk := NewRAMDisk(4 * 1024 * 1024)
 	kvs := New(disk, 1024)
 	err := kvs.Format()
@@ -77,7 +77,7 @@ func TestIndexBlockAddSplit(t *testing.T) {
 	}
 	err = kvs.Root.Add(k3)
 
-	assert.Equal(t, 84, len(*kvs.Root.KeyPointerList))
+	assert.Equal(t, 87, len(*kvs.Root.KeyPointerList))
 
 	kp, found, err := kvs.Root.Find(kv3)
 	assert.Nil(t, err)
@@ -91,7 +91,7 @@ func TestIndexBlockAddSplit(t *testing.T) {
 	}
 	err = kvs.Root.Add(k4)
 
-	assert.Equal(t, 84, len(*kvs.Root.KeyPointerList))
+	assert.Equal(t, 88, len(*kvs.Root.KeyPointerList))
 
 	kp, found, err = kvs.Root.Find(kv4)
 	assert.Nil(t, err)

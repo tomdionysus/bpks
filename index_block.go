@@ -77,7 +77,7 @@ func (ib *IndexBlock) Add(kp KeyPointer) error {
 		ib.KeyPointerList.Add(kp)
 		ib.Min.Key = ib.KeyPointerList.MinKey()
 		ib.Max.Key = ib.KeyPointerList.MaxKey()
-		return ib.BPKS.WriteIndexBlock(ib)
+		return ib.BPKS.WriteBlock(ib)
 	}
 
 	leftkpl := KeyPointerList((*ib.KeyPointerList)[0:42])
@@ -107,11 +107,11 @@ func (ib *IndexBlock) Add(kp KeyPointer) error {
 	// fmt.Printf("-- Split Index Block %d -> %d / %d\n", ib.BlockAddress, left.BlockAddress, right.BlockAddress)
 	left.Min = ib.Min
 	right.Max = ib.Max
-	err = ib.BPKS.WriteIndexBlock(&left)
+	err = ib.BPKS.WriteBlock(&left)
 	if err != nil {
 		return err
 	}
-	err = ib.BPKS.WriteIndexBlock(&right)
+	err = ib.BPKS.WriteBlock(&right)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (ib *IndexBlock) Add(kp KeyPointer) error {
 	ib.Min.BlockAddress = left.BlockAddress
 	ib.Max.Key = ib.KeyPointerList.MaxKey()
 	ib.Max.BlockAddress = right.BlockAddress
-	return ib.BPKS.WriteIndexBlock(ib)
+	return ib.BPKS.WriteBlock(ib)
 }
 
 // Find finds and returns the KeyPointer associated with the supplied key in this IndexBlock or one of
@@ -177,12 +177,17 @@ func (ib *IndexBlock) Remove(key Key) (KeyPointer, bool, error) {
 	kp, found := ib.KeyPointerList.Remove(key)
 
 	if found {
-		ib.BPKS.WriteIndexBlock(ib)
+		ib.BPKS.WriteBlock(ib)
 	}
 
 	// TODO: Merge indexblocks if underpopulated
 
 	return kp, found, nil
+}
+
+// GetBlockAddress returns the block address of this block.
+func (ib *IndexBlock) GetBlockAddress() uint64 {
+	return ib.BlockAddress
 }
 
 // AsSlice serialises and returns the IndexBlock as a []byte, padded to BlockSize.

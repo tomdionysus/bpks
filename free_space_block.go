@@ -53,6 +53,11 @@ func NewFreeSpaceBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte)
 	}
 }
 
+// GetBlockAddress returns the block address of this block.
+func (fsb *FreeSpaceBlock) GetBlockAddress() uint64 {
+	return fsb.BlockAddress
+}
+
 // AsSlice serialises and returns the IndexBlock as a []byte, padded to BlockSize.
 func (fsb *FreeSpaceBlock) AsSlice() []byte {
 	buf := uint64ToSlice(fsb.Min)

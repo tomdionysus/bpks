@@ -21,10 +21,10 @@ func NewFreeSpaceFromBuffer(buffer []byte) FreeSpace {
 // * +1 If this Min is more than the other Min
 func (fs FreeSpace) Cmp(other FreeSpace) int {
 	if fs.Min < other.Min {
-		return -1
+		return 1
 	}
 	if fs.Min > other.Min {
-		return 1
+		return -1
 	}
 	return 0
 }

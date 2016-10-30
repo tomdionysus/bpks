@@ -45,6 +45,11 @@ func NewDataBlockFromBuffer(bpks *BPKS, blockAddress uint64, buffer []byte) *Dat
 	return x
 }
 
+// GetBlockAddress returns the block address of this block.
+func (db *DataBlock) GetBlockAddress() uint64 {
+	return db.BlockAddress
+}
+
 // AsSlice serialises and returns the DataBlock as a []byte, padded to BlockSize.
 func (db *DataBlock) AsSlice() []byte {
 	buf := uint64ToSlice(db.Prev)

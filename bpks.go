@@ -40,7 +40,7 @@ func (bp *BPKS) Mount() error {
 	if err != nil {
 		return err
 	}
-	var buf = make([]byte, BlockSize*2)
+	var buf = make([]byte, 6)
 	_, err = bp.Device.Read(buf)
 	if err != nil {
 		return err
@@ -78,16 +78,16 @@ func (bp *BPKS) Format() error {
 		return err
 	}
 
-	// Root FreeSpace Block at blockAddress 2 spanning free space from block 3 -> SizeBlocks
-	bp.FreeSpace = NewFreeSpaceBlock(bp, 2, 3, bp.SizeBlocks)
-	err = bp.WriteFreeSpaceBlock(bp.FreeSpace)
+	// Root FreeSpace Block at blockAddress 2 spanning free space from block 4 -> SizeBlocks
+	bp.FreeSpace = NewFreeSpaceBlock(bp, 2, 4, bp.SizeBlocks)
+	err = bp.WriteBlock(bp.FreeSpace)
 	if err != nil {
 		return err
 	}
 
 	// Root Index Block at blockAddress 3
 	bp.Root = NewIndexBlock(bp, 3)
-	return bp.WriteIndexBlock(bp.Root)
+	return bp.WriteBlock(bp.Root)
 }
 
 // Set writes a key/value pair of the MD5 of the supplied string, and data, to the key store,
@@ -115,7 +115,7 @@ func (bp *BPKS) Set(key string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	err = bp.WriteDataBlock(db)
+	err = bp.WriteBlock(db)
 	if err != nil {
 		return err
 	}
@@ -213,48 +213,14 @@ func (bp *BPKS) ReadDataBlock(blockAddress uint64) (*DataBlock, error) {
 
 // WriteFreeSpaceBlock writes the specified IndexBlock to its block address, returning
 // nil on success or an error.
-func (bp *BPKS) WriteFreeSpaceBlock(block *FreeSpaceBlock) error {
+func (bp *BPKS) WriteBlock(block Block) error {
 	// fmt.Printf("Writing FreeSpace Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
-	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
+	_, err := bp.Device.Seek(int64(block.GetBlockAddress()*BlockSize), 0)
 	if err != nil {
 		return err
 	}
 	buffer := block.AsSlice()
-	_, err = bp.Device.Write(buffer[:])
-	if err != nil {
-		return err
-	}
-	// fmt.Printf("- Wrote %d bytes\n", c)
-	return nil
-}
-
-// WriteIndexBlock writes the specified IndexBlock to its block address, returning
-// nil on success or an error.
-func (bp *BPKS) WriteIndexBlock(block *IndexBlock) error {
-	// fmt.Printf("Writing Index Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
-	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
-	if err != nil {
-		return err
-	}
-	buffer := block.AsSlice()
-	_, err = bp.Device.Write(buffer[:])
-	if err != nil {
-		return err
-	}
-	// fmt.Printf("- Wrote %d bytes\n", c)
-	return nil
-}
-
-// WriteDataBlock writes the specified DataBlock to its block address, returning
-// nil on success or an error.
-func (bp *BPKS) WriteDataBlock(block *DataBlock) error {
-	// fmt.Printf("Writing Data Block at address %d (offset %d)\n", block.BlockAddress, block.BlockAddress*BlockSize)
-	_, err := bp.Device.Seek(int64(block.BlockAddress*BlockSize), 0)
-	if err != nil {
-		return err
-	}
-	buffer := block.AsSlice()
-	_, err = bp.Device.Write(buffer[:])
+	_, err = bp.Device.Write(buffer[:BlockSize])
 	if err != nil {
 		return err
 	}
